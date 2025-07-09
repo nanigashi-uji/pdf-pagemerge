@@ -1,4 +1,4 @@
-# Pdf_merge_multipage
+# pdf_pagemerge
 
 PDFファイルの複数ページを余白なしで1ページにまとめるレイアウト変更のためのスクリプト。
 

@@ -1,4 +1,4 @@
-# Pdf_merge_multipages
+# pdf_pagemerge
 
 Script for layout change of PDF file by merging multiple pages into single page w/o margin.
 
