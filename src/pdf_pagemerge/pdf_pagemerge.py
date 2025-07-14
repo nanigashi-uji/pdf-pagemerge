@@ -36,7 +36,7 @@ class FileTypeWithCheck(argparse.FileType):
 
 class PDFMerger:
 
-    VERSION = "0.0.1"
+    VERSION = "0.0.2"
 
     def __init__(self):
         self.pdfrdrs  = []
