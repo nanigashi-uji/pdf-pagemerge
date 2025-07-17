@@ -36,7 +36,7 @@ class FileTypeWithCheck(argparse.FileType):
 
 class PDFMerger:
 
-    VERSION = "0.0.2"
+    VERSION = "0.0.3"
 
     def __init__(self):
         self.pdfrdrs  = []
@@ -233,8 +233,6 @@ class PDFMerger:
                     rt  = ipg.get('/Rotate') or 0
                     width,height,flg_lndscp = dim[0:3]
                     
-                    print(i,j, idx)
-
                     if (rotation == 'left' or 
                         (rotation == 'auto' and oflg_landscape!=flg_lndscp)):
                         rt += +90
@@ -294,22 +292,9 @@ class PDFMerger:
                     # Original (Deprecated) code for PyPDF2
                     #opage.mergeRotatedScaledTranslatedPage(page2=ipg, tx=hoffset, ty=voffset,
                     #                                        rotation=rt, scale=scalefctr, expand=False)
+                    trnsfm = pypdf.Transformation().rotate(rotation=rt).translate(tx=hoffset, ty=voffset).scale(sx=scalefctr, sy=scalefctr)
+                    opage.merge_transformed_page(ipg, trnsfm)
 
-                    ipg.add_transformation(pypdf.Transformation().rotate(rotation=rt).translate(tx=hoffset, ty=voffset).scale(sx=scalefctr, sy=scalefctr))
-
-                    ipg_dh = ipg.mediabox.right - ipg.mediabox.left
-                    ipg_dv = ipg.mediabox.top   - ipg.mediabox.bottom
-
-                    ipg_ndh = int(math.fabs(scalefctr*math.cos(math.radians(rt))*ipg_dh - math.sin(math.radians(rt))*ipg_dv))
-                    ipg_ndv = int(math.fabs(scalefctr*math.cos(math.radians(rt))*ipg_dv + math.sin(math.radians(rt))*ipg_dh))
-
-                    ipg.mediabox.right  = ipg.mediabox.left   + ipg_ndh
-                    ipg.mediabox.top    = ipg.mediabox.bottom + ipg_ndv
-                    #ipg.mediabox.left   += hoffset
-                    ipg.mediabox.right   += hoffset
-                    ipg.mediabox.top     += voffset
-                    #ipg.mediabox.bottom += voffset
-                    opage.merge_page(ipg, expand=False)
         return
 
     def write(self, ofs):
@@ -321,46 +306,46 @@ def main():
     argpsr.add_argument('inputs', metavar='input-file', type=argparse.FileType('rb'),
                         nargs='+', help='Input PDF file(s)')
     argpsr.add_argument('-o', '--output', metavar='filename', type=FileTypeWithCheck('wb'),
-                        nargs=1, help='Output file', dest='output', default='a.out.pdf')
+                        help='Output file', dest='output', default='a.out.pdf')
     argpsr.add_argument('-c', '--columns', metavar='n_h', type=int,
-                        nargs=1, help='# of columns of merged pages (default = 2)', dest='n_x', default=2)
+                        help='# of columns of merged pages (default = 2)', dest='n_x', default=2)
     argpsr.add_argument('-l', '--lines', metavar='n_v', type=int,
-                        nargs=1, help='# of lines of merged pages (default = 1)', dest='n_y', default=1)
-    argpsr.add_argument('-p', '--page-order', metavar='opt', type=str, nargs=1, dest='order', 
+                        help='# of lines of merged pages (default = 1)', dest='n_y', default=1)
+    argpsr.add_argument('-p', '--page-order', metavar='opt', type=str, dest='order', 
                         choices=['left2right', 'left2bottom', 'left2top', 'right2left', 'right2bottom', 'right2top'],
                         default='left2right', help='Page order (choices=left2right[default], left2bottom, right2left, right2bottom)')
-    argpsr.add_argument('-r', '--rotation', metavar='opt', type=str, nargs=1, dest='rotation', 
+    argpsr.add_argument('-r', '--rotation', metavar='opt', type=str, dest='rotation', 
                         choices=['none', 'flip', 'right', 'left', 'auto', 'rauto'],
                         default='none',
                         help='Page orientation (choices=none[default], flip, right, left, auto, rauto)')
-    argpsr.add_argument('-V', '--valign', metavar='opt', type=str, nargs=1, dest='valign', 
+    argpsr.add_argument('-V', '--valign', metavar='opt', type=str, dest='valign', 
                         choices=['resize', 'none', 'top', 'bottom', 'center', 'fit'],
                         default='none', help='Page fitting (choices=resize, none[default], top, bottom, center, fit)')
-    argpsr.add_argument('-A', '--align', metavar='opt', type=str, nargs=1, dest='halign', 
+    argpsr.add_argument('-A', '--align', metavar='opt', type=str, dest='halign', 
                         choices=['resize', 'none', 'right', 'left', 'center', 'fit'],
                         default='none', help='Page fitting (choices=resize, none[default], right, left, center, fit)')
-    argpsr.add_argument('-m', '--metainfo', metavar='opt', type=str, nargs=1, dest='metainfo', 
+    argpsr.add_argument('-m', '--metainfo', metavar='opt', type=str, dest='metainfo', 
                         choices=['full', 'none', 'partial', 'short'],
                         default='full', help='Meta data for marged file (choices=full[default], none, partial, short)')
-    argpsr.add_argument('-t', '-title', metavar='text', type=str, nargs=1, dest='title', 
+    argpsr.add_argument('-t', '-title', metavar='text', type=str, dest='title', 
                         help='set title in meta data for marged file (Default: output file name)')
 
     args = argpsr.parse_args()
     
-    pdfmgr = PDFMarger()
-    pdfmgr.prep_pdfreader(args.inputs, level=args.metainfo[0])
-    pdfmgr.merge_pages(nh=args.n_x[0], nv=args.n_y[0], 
-                       order=args.order[0], rotation=args.rotation[0], valign=args.valign[0], halign=args.halign[0])
-    if args.title is not None and args.title[0] is not None and len(args.title[0])>0:
-        pdfmgr.merge_documentinfo(level=args.metainfo[0], title=args.title[0])
+    pdfmgr = PDFMerger()
+    pdfmgr.prep_pdfreader(args.inputs, level=args.metainfo)
+    pdfmgr.merge_pages(nh=args.n_x, nv=args.n_y, 
+                       order=args.order[0], rotation=args.rotation, valign=args.valign, halign=args.halign)
+    if args.title is not None and args.title is not None and len(args.title)>0:
+        pdfmgr.merge_documentinfo(level=args.metainfo, title=args.title)
     else:
-        pdfmgr.merge_documentinfo(level=args.metainfo[0], title=args.output[0].name)
+        pdfmgr.merge_documentinfo(level=args.metainfo, title=args.output.name)
 
-    pdfmgr.write(args.output[0])
+    pdfmgr.write(args.output)
     
     for ifs in args.inputs:
         ifs.close();
-        args.output[0].close()
+        args.output.close()
             
     return
 

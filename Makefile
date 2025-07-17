@@ -45,11 +45,20 @@ test_src: $(MOD_TEST_DIR_SRC)
 	env PYTHONPATH=$(MOD_TEST_DIR_SRC):$(PYTHONPATH) $(PIP) install --target $(MOD_TEST_DIR_SRC) $(notdir $(MOD_DEPENDENCIES))
 	env PYTHONPATH=$(MOD_TEST_DIR_SRC):$(PYTHONPATH) $(PIP) install --target $(MOD_TEST_DIR_SRC) $(PWD)
 	env PYTHONPATH=$(MOD_TEST_DIR_SRC):$(PYTHONPATH) $(MOD_TEST_DIR_SRC)/bin/$(MODULE_SPATH) $(MOD_TEST_OPT)
+	rm -f $(MOD_TEST_DIR_SRC)/test.pdf
+	env PYTHONPATH=$(MOD_TEST_DIR_SRC):$(PYTHONPATH) $(MOD_TEST_DIR_SRC)/bin/$(MODULE_SPATH) -o $(MOD_TEST_DIR_SRC)/test.pdf \
+        --columns=2 --lines=2 --rotation=auto ./test/input_portleit_1.pdf ./test/input_landscape_1.pdf
+	@echo Check if $(MOD_TEST_DIR_SRC)/test.pdf as expected.
+
 
 test_dist: $(MOD_TEST_DIR_DIST) dist/$(MODULE_SPATH)-$(MOD_VERSION).tar.gz
 #env PYTHONPATH=$(MOD_TEST_DIR_DIST):$(PYTHONPATH) $(PIP) install --target $(MOD_TEST_DIR_DIST) $(notdir $(MOD_DEPENDENCIES))
 	env PYTHONPATH=$(MOD_TEST_DIR_DIST):$(PYTHONPATH) $(PIP) install --target $(MOD_TEST_DIR_DIST) dist/$(MODULE_SPATH)-$(MOD_VERSION).tar.gz
 	env PYTHONPATH=$(MOD_TEST_DIR_DIST):$(PYTHONPATH) $(MOD_TEST_DIR_DIST)/bin/$(MODULE_SPATH) $(MOD_TEST_OPT)
+	rm -f $(MOD_TEST_DIR_DIST)/test.pdf
+	env PYTHONPATH=$(MOD_TEST_DIR_DIST):$(PYTHONPATH) $(MOD_TEST_DIR_DIST)/bin/$(MODULE_SPATH) -o $(MOD_TEST_DIR_DIST)/test.pdf \
+        --columns=2 --lines=2 --rotation=auto  ./test/input_portleit_1.pdf ./test/input_landscape_1.pdf
+	@echo Check if $(MOD_TEST_DIR_dist)/test.pdf as expected.
 
 dist/$(MODULE_SPATH)-$(MOD_VERSION).tar.gz: sdist
 
@@ -73,5 +82,6 @@ clean:
 
 distclean: clean
 	rm -rf $(MODULE_SPATH).egg-info \
+           $(MOD_TEST_DIR_SRC) $(MOD_TEST_DIR_DIST) \
            dist build lib var
 
